@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
     MoreVerticalIcon,
@@ -28,25 +28,46 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Pagination } from "@/components/ui/pagination"
+import { ConfirmModal } from "@/components/ui/confirm-modal"
 import { deleteTicketAction, updateTicketStatusAction } from "@/app/actions/ticket.actions"
 import { toast } from "sonner"
 
+const ITEMS_PER_PAGE = 8
+
 export function TicketList({ initialTickets }: { initialTickets: any[] }) {
     const [searchQuery, setSearchQuery] = useState("")
+    const [currentPage, setCurrentPage] = useState(1)
+    const [ticketToDelete, setTicketToDelete] = useState<string | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
 
     const filteredTickets = initialTickets.filter(ticket =>
         ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         ticket.id.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Apakah Anda yakin ingin menghapus tiket ini?")) return
+    // Pagination Logic
+    const totalPages = Math.ceil(filteredTickets.length / ITEMS_PER_PAGE)
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    const paginatedTickets = filteredTickets.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+
+    // Reset to page 1 when searching
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [searchQuery])
+
+    const handleDelete = async () => {
+        if (!ticketToDelete) return
+        setIsDeleting(true)
 
         try {
-            await deleteTicketAction(id)
+            await deleteTicketAction(ticketToDelete)
             toast.success("Tiket Berhasil Dihapus")
+            setTicketToDelete(null)
         } catch (error: any) {
             toast.error("Gagal menghapus tiket: " + error.message)
+        } finally {
+            setIsDeleting(false)
         }
     }
 
@@ -110,8 +131,8 @@ export function TicketList({ initialTickets }: { initialTickets: any[] }) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredTickets.length > 0 ? (
-                                filteredTickets.map((ticket) => (
+                            {paginatedTickets.length > 0 ? (
+                                paginatedTickets.map((ticket) => (
                                     <TableRow key={ticket.id} className="cursor-pointer hover:bg-muted/50 transition-colors">
                                         <TableCell className="font-mono text-xs font-medium">{ticket.id.substring(0, 8)}</TableCell>
                                         <TableCell className="font-medium">{ticket.title}</TableCell>
@@ -144,7 +165,7 @@ export function TicketList({ initialTickets }: { initialTickets: any[] }) {
                                                         Tutup
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
-                                                        onClick={() => handleDelete(ticket.id)}
+                                                        onClick={() => setTicketToDelete(ticket.id)}
                                                         className="text-red-500 focus:text-red-500 focus:bg-red-50"
                                                     >
                                                         <HugeiconsIcon icon={Delete02Icon} className="mr-2 size-4" />
@@ -166,6 +187,23 @@ export function TicketList({ initialTickets }: { initialTickets: any[] }) {
                     </Table>
                 </CardContent>
             </Card>
+
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+            />
+
+            <ConfirmModal
+                isOpen={!!ticketToDelete}
+                onClose={() => setTicketToDelete(null)}
+                onConfirm={handleDelete}
+                isLoading={isDeleting}
+                variant="destructive"
+                title="Hapus Tiket?"
+                description="Tiket ini akan dihapus permanen. Pastikan masalah sudah benar-benar selesai atau tidak valid."
+                confirmText="Ya, Hapus Tiket"
+            />
         </div>
     )
 }

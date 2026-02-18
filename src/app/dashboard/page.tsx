@@ -18,11 +18,13 @@ import {
     SourceCodeIcon,
     TaskDaily01Icon,
     ActivityIcon,
-    UserIcon
+    UserIcon,
+    ArrowRight01Icon
 } from "@hugeicons/core-free-icons"
 
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import Link from "next/link"
 
 export default async function DashboardPage() {
     const session = await getServerSession(authOptions)
@@ -46,159 +48,178 @@ export default async function DashboardPage() {
 
     const stats = [
         {
-            title: isUser ? "Tiket Saya (Aktif)" : "Tiket Terbuka",
+            title: isUser ? "Tiket Saya" : "Tiket Terbuka",
             value: openTicketsCount.toString(),
-            description: "Membutuhkan perhatian segera",
+            description: "Butuh Perhatian",
             icon: Ticket01Icon,
             color: "text-blue-500",
+            bg: "bg-blue-50/50",
+            border: "border-blue-100/50"
         },
         ...(!isUser ? [
             {
-                title: "Proyek Infra Aktif",
+                title: "Infra Aktif",
                 value: activeInfraCount.toString(),
-                description: "Sedang dalam pengerjaan",
+                description: "Dalam Progres",
                 icon: Building01Icon,
                 color: "text-orange-500",
+                bg: "bg-orange-50/50",
+                border: "border-orange-100/50"
             },
             {
-                title: "Proyek Web Aktif",
+                title: "Web Aktif",
                 value: activeWebCount.toString(),
-                description: "Dalam perancangan/dev",
+                description: "Dalam Dev",
                 icon: SourceCodeIcon,
                 color: "text-purple-500",
+                bg: "bg-purple-50/50",
+                border: "border-purple-100/50"
             },
             {
-                title: "Tugas Hari Ini",
+                title: "Tugas Rutin",
                 value: `${completedTasksCount}/${todayTasks.length}`,
-                description: "Progres pemeliharaan harian",
+                description: "Progres Terkini",
                 icon: TaskDaily01Icon,
-                color: "text-green-500",
+                color: "text-emerald-500",
+                bg: "bg-emerald-50/50",
+                border: "border-emerald-100/50"
             },
         ] : [])
     ]
 
     return (
-        <div className="flex flex-1 flex-col gap-4 p-4">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="flex flex-1 flex-col gap-4 p-4 sm:p-5">
+            {/* Stats Header */}
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {stats.map((stat) => (
-                    <Card key={stat.title}>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                {stat.title}
-                            </CardTitle>
-                            <HugeiconsIcon icon={stat.icon} className={`size-4 ${stat.color}`} />
+                    <Card key={stat.title} className="group border-primary/10 shadow-[0_2px_10px_rgba(0,0,0,0.01)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.03)] bg-white rounded-2xl transition-all duration-300">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 pt-4 px-5">
+                            <div className="p-1.5 rounded-lg bg-slate-50 border border-slate-100/50 group-hover:bg-primary/5 group-hover:border-primary/20 transition-colors">
+                                <HugeiconsIcon icon={stat.icon} className="size-4 text-slate-400 group-hover:text-primary transition-colors" />
+                            </div>
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-300">{stat.description}</span>
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stat.value}</div>
-                            <p className="text-xs text-muted-foreground">
-                                {stat.description}
+                        <CardContent className="pb-4 px-5">
+                            <div className="text-2xl font-bold text-slate-800 tracking-tight">{stat.value}</div>
+                            <p className="text-[12px] font-bold text-slate-500 mt-0.5 uppercase tracking-tighter opacity-80">
+                                {stat.title}
                             </p>
                         </CardContent>
                     </Card>
                 ))}
             </div>
-            <div className={`grid gap-4 ${isUser ? "grid-cols-1" : "md:grid-cols-2 lg:grid-cols-7"}`}>
-                <Card className={isUser ? "col-span-1" : "col-span-4"}>
-                    <CardHeader>
-                        <CardTitle>{isUser ? "Tiket Saya" : "Tiket Terbaru"}</CardTitle>
-                        <CardDescription>
-                            {isUser ? "Status permintaan bantuan Anda." : "Permintaan bantuan terbaru dari karyawan."}
-                        </CardDescription>
+
+            {/* Main Content Grid */}
+            <div className={`grid gap-4 ${isUser ? "grid-cols-1" : "lg:grid-cols-12"}`}>
+                {/* Tickets Section */}
+                <Card className={`${isUser ? "col-span-1" : "lg:col-span-7"} border-primary/10 shadow-[0_2px_15px_rgba(0,0,0,0.01)] bg-white rounded-2xl overflow-hidden`}>
+                    <CardHeader className="flex flex-row items-center justify-between px-6 py-5 border-b border-slate-50">
+                        <div className="space-y-0.5">
+                            <CardTitle className="text-sm font-bold text-slate-800 tracking-tight">{isUser ? "My Tickets" : "Recent Tickets"}</CardTitle>
+                            <CardDescription className="text-[11px] font-medium text-slate-400">
+                                {isUser ? "Status of your help requests" : "Latest employee support requests"}
+                            </CardDescription>
+                        </div>
+                        <Link href="/dashboard/ticketing" className="text-[10px] font-bold text-primary flex items-center gap-1 hover:opacity-70 transition-opacity uppercase tracking-widest">
+                            View All <HugeiconsIcon icon={ArrowRight01Icon} className="size-2.5" />
+                        </Link>
                     </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
-                            {tickets.length > 0 ? tickets.slice(0, 3).map((ticket) => (
-                                <div key={ticket.id} className="flex items-center gap-4 rounded-lg border p-3">
-                                    <div className="flex size-9 items-center justify-center rounded-full bg-muted">
+                    <CardContent className="p-0">
+                        <div className="divide-y divide-slate-50">
+                            {tickets.length > 0 ? tickets.slice(0, 4).map((ticket) => (
+                                <div key={ticket.id} className="group flex items-center gap-3 px-6 py-3.5 hover:bg-slate-50/50 transition-colors">
+                                    <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-300 group-hover:text-primary transition-colors border border-transparent group-hover:border-primary/10">
                                         <HugeiconsIcon icon={Ticket01Icon} className="size-4" />
                                     </div>
-                                    <div className="flex-1 space-y-1">
-                                        <p className="text-sm font-medium leading-none">
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-[13px] font-bold text-slate-700 truncate mb-0.5 group-hover:text-slate-900 transition-colors">
                                             {ticket.title}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {isUser ? `Dibuat ${formatDistanceToNow(ticket.createdAt, { addSuffix: true, locale: id })}` : `Oleh ${ticket.creator?.name || "Anonim"} • ${formatDistanceToNow(ticket.createdAt, { addSuffix: true, locale: id })}`}
+                                        </h4>
+                                        <p className="text-[10px] font-medium text-slate-400/80">
+                                            {isUser ? `Created ${formatDistanceToNow(ticket.createdAt, { addSuffix: true, locale: id })}` : `${ticket.creator?.name || "Anon"} • ${formatDistanceToNow(ticket.createdAt, { addSuffix: true, locale: id })}`}
                                         </p>
                                     </div>
-                                    <div className={`text-xs font-semibold uppercase ${ticket.priority === 'URGENT' ? 'text-red-600' :
-                                        ticket.priority === 'HIGH' ? 'text-orange-500' : 'text-blue-500'
-                                        }`}>
+                                    <div className={`shrink-0 px-2 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase border border-slate-100 bg-slate-50 text-slate-400 group-hover:text-primary group-hover:border-primary/20 group-hover:bg-primary/5 transition-all`}>
                                         {ticket.priority}
                                     </div>
                                 </div>
                             )) : (
-                                <p className="text-sm text-center py-4 text-muted-foreground italic">Belum ada tiket.</p>
+                                <div className="text-center py-8">
+                                    <p className="text-xs font-medium text-slate-400 italic">No tickets found</p>
+                                </div>
                             )}
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* Right Side Column */}
                 {!isUser && (
-                    <Card className="col-span-3">
-                        <CardHeader>
-                            <CardTitle>Tugas Harian</CardTitle>
-                            <CardDescription>
-                                Tugas pemeliharaan rutin untuk hari ini.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                {todayTasks.length > 0 ? todayTasks.slice(0, 5).map((task) => (
-                                    <div key={task.id} className="flex items-center gap-3">
-                                        <div className={`size-4 rounded border ${task.isCompleted ? 'bg-primary border-primary' : ''}`} />
-                                        <span className={`text-sm ${task.isCompleted ? 'line-through text-muted-foreground' : ''}`}>
-                                            {task.title}
-                                        </span>
-                                    </div>
-                                )) : (
-                                    <p className="text-sm text-center py-4 text-muted-foreground italic">Tidak ada tugas hari ini.</p>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <div className="lg:col-span-5 flex flex-col gap-4">
+                        {/* Daily Tasks Card */}
+                        <Card className="border-primary/10 shadow-[0_2px_15px_rgba(0,0,0,0.01)] bg-white rounded-2xl overflow-hidden">
+                            <CardHeader className="px-6 py-5 border-b border-slate-50">
+                                <CardTitle className="text-sm font-bold text-slate-800 tracking-tight">Daily To-Do</CardTitle>
+                                <CardDescription className="text-[11px] font-medium text-slate-400">
+                                    Routine maintenance tasks
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="px-6 py-4">
+                                <div className="space-y-3">
+                                    {todayTasks.length > 0 ? todayTasks.slice(0, 5).map((task) => (
+                                        <div key={task.id} className="flex items-center gap-3 group">
+                                            <div className={`size-4 rounded border transition-all duration-300 flex items-center justify-center ${task.isCompleted
+                                                ? 'bg-primary border-primary'
+                                                : 'border-slate-200 group-hover:border-primary/50'
+                                                }`}>
+                                                {task.isCompleted && <div className="size-1 bg-white rounded-full" />}
+                                            </div>
+                                            <span className={`text-[13px] font-medium transition-colors ${task.isCompleted ? 'text-slate-300 line-through' : 'text-slate-500 group-hover:text-slate-800'
+                                                }`}>
+                                                {task.title}
+                                            </span>
+                                        </div>
+                                    )) : (
+                                        <p className="text-[11px] font-medium text-slate-400 italic">No tasks for today</p>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Audit Logs Card */}
+                        <Card className="flex-1 border-primary/10 shadow-[0_2px_15px_rgba(0,0,0,0.01)] bg-white rounded-2xl overflow-hidden">
+                            <CardHeader className="px-6 py-4 border-b border-slate-50">
+                                <CardTitle className="text-[10px] font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                                    <HugeiconsIcon icon={ActivityIcon} className="size-3.5" />
+                                    System Activity
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <div className="divide-y divide-slate-50">
+                                    {rawLogs.length > 0 ? rawLogs.map((log: any) => (
+                                        <div key={log.id} className="px-6 py-3.5 flex items-start gap-3">
+                                            <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-slate-50 border border-slate-100 text-slate-300">
+                                                <HugeiconsIcon icon={UserIcon} className="size-3.5" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-[12px] leading-relaxed">
+                                                    <span className="font-bold text-slate-700">{log.user?.name || "System"}</span>
+                                                    <span className="text-slate-400 px-1">{log.action}</span>
+                                                    <span className="font-bold text-primary/80">{log.entity}</span>
+                                                </p>
+                                                <p className="text-[9px] font-bold text-slate-300 uppercase mt-1 tracking-tighter">
+                                                    {formatDistanceToNow(log.timestamp, { addSuffix: true, locale: id })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )) : (
+                                        <p className="text-center py-6 text-[11px] font-medium text-slate-400 italic">No activity logs</p>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
                 )}
             </div>
-
-            {!isUser && (
-                <Card className="border-none shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <HugeiconsIcon icon={ActivityIcon} className="size-5 text-primary" />
-                            Log Aktivitas Sistem (Audit Logs)
-                        </CardTitle>
-                        <CardDescription>
-                            Riwayat perubahan data terbaru yang dilakukan oleh admin dan staf.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
-                            {rawLogs.length > 0 ? rawLogs.map((log: any) => (
-                                <div key={log.id} className="flex items-start gap-4 text-sm pb-4 border-b last:border-0 last:pb-0">
-                                    <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0">
-                                        <HugeiconsIcon icon={UserIcon} className="size-4" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-slate-900">
-                                            {log.user?.name || "Sistem"}
-                                            <span className="font-normal text-slate-500"> melakukan </span>
-                                            <span className="text-primary">{log.action}</span>
-                                            <span className="font-normal text-slate-500"> pada </span>
-                                            {log.entity}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground mt-0.5 truncate italic">
-                                            {log.details}
-                                        </p>
-                                    </div>
-                                    <div className="text-[10px] text-slate-400 whitespace-nowrap pt-1">
-                                        {formatDistanceToNow(log.timestamp, { addSuffix: true, locale: id })}
-                                    </div>
-                                </div>
-                            )) : (
-                                <p className="text-center py-8 text-muted-foreground italic">Belum ada riwayat aktivitas.</p>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
         </div>
     )
 }

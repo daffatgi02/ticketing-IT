@@ -27,25 +27,47 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Pagination } from "@/components/ui/pagination"
+import { ConfirmModal } from "@/components/ui/confirm-modal"
 import { deleteUserAction } from "@/app/actions/user.actions"
 import { toast } from "sonner"
+import { useEffect } from "react"
+
+const ITEMS_PER_PAGE = 10
 
 export function UserList({ initialUsers }: { initialUsers: any[] }) {
     const [searchQuery, setSearchQuery] = useState("")
+    const [currentPage, setCurrentPage] = useState(1)
+    const [userToDelete, setUserToDelete] = useState<string | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
 
     const filteredUsers = initialUsers.filter(user =>
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.email.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Hapus pengguna ini? Tindakan ini tidak dapat dibatalkan.")) return
+    // Pagination Logic
+    const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE)
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    const paginatedUsers = filteredUsers.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+
+    // Reset to page 1 when searching
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [searchQuery])
+
+    const handleDelete = async () => {
+        if (!userToDelete) return
+        setIsDeleting(true)
 
         try {
-            await deleteUserAction(id)
+            await deleteUserAction(userToDelete)
             toast.success("Pengguna berhasil dihapus")
+            setUserToDelete(null)
         } catch (error: any) {
             toast.error("Gagal menghapus pengguna: " + error.message)
+        } finally {
+            setIsDeleting(false)
         }
     }
 
@@ -85,8 +107,8 @@ export function UserList({ initialUsers }: { initialUsers: any[] }) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredUsers.length > 0 ? (
-                                filteredUsers.map((user) => (
+                            {paginatedUsers.length > 0 ? (
+                                paginatedUsers.map((user) => (
                                     <TableRow key={user.id}>
                                         <TableCell className="font-medium">
                                             <div className="flex items-center gap-2">
@@ -119,7 +141,7 @@ export function UserList({ initialUsers }: { initialUsers: any[] }) {
                                                         Edit Profil
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
-                                                        onClick={() => handleDelete(user.id)}
+                                                        onClick={() => setUserToDelete(user.id)}
                                                         className="text-red-500 focus:text-red-500 focus:bg-red-50"
                                                     >
                                                         <HugeiconsIcon icon={Delete02Icon} className="mr-2 size-4" />
@@ -141,6 +163,23 @@ export function UserList({ initialUsers }: { initialUsers: any[] }) {
                     </Table>
                 </CardContent>
             </Card>
+
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+            />
+
+            <ConfirmModal
+                isOpen={!!userToDelete}
+                onClose={() => setUserToDelete(null)}
+                onConfirm={handleDelete}
+                isLoading={isDeleting}
+                variant="destructive"
+                title="Hapus Pengguna?"
+                description="Tindakan ini tidak dapat dibatalkan. Pengguna akan dihapus permanen dari sistem."
+                confirmText="Hapus Sekarang"
+            />
         </div>
     )
 }

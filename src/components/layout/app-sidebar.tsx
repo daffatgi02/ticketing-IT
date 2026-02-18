@@ -70,15 +70,12 @@ export function AppSidebar() {
     const { data: session } = useSession()
 
     const navItems = React.useMemo(() => {
-        // Base items for ADMIN and STAFF
         let filtered = [...items]
 
-        // Jika USER, lepaskan semua kecuali "Tiket Bantuan"
         if (session?.user?.role === "USER") {
             filtered = items.filter(item => item.title === "Tiket Bantuan")
         }
 
-        // Tambahkan Manajemen Pengguna khusus ADMIN
         if (session?.user?.role === "ADMIN") {
             filtered.push({
                 title: "Manajemen Pengguna",
@@ -91,43 +88,52 @@ export function AppSidebar() {
     }, [session?.user?.role])
 
     return (
-        <Sidebar collapsible="icon">
-            <SidebarHeader>
+        <Sidebar collapsible="icon" className="border-r border-slate-100 bg-white">
+            <SidebarHeader className="pt-5 px-3">
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg">
-                            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground overflow-hidden">
+                        <SidebarMenuButton size="lg" className="h-12 hover:bg-slate-50 rounded-xl transition-all">
+                            <div className="flex aspect-square size-9 items-center justify-center rounded-lg bg-white shadow-sm border border-slate-100 overflow-hidden transition-transform group-hover:scale-105 shrink-0">
                                 <Image
                                     src="/Logo WIG.png"
                                     alt="PT WIG Logo"
-                                    width={32}
-                                    height={32}
+                                    width={24}
+                                    height={24}
                                     className="object-contain"
                                 />
                             </div>
-                            <div className="flex flex-col gap-0.5 leading-none">
-                                <span className="font-semibold text-xs">PT Wijaya Inovasi Gemilang</span>
-                                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">IT Dashboard</span>
+                            <div className="flex flex-col gap-0 ml-2 leading-tight group-data-[state=collapsed]:hidden">
+                                <span className="font-bold text-xs text-slate-800 truncate">PT Wijaya Inovasi</span>
+                                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">IT Platform</span>
                             </div>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
-            <SidebarContent>
+            <SidebarContent className="px-2 pt-4">
                 <SidebarGroup>
-                    <SidebarGroupLabel>Menu Utama</SidebarGroupLabel>
+                    <SidebarGroupLabel className="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-400/80 mb-3">
+                        Main Navigation
+                    </SidebarGroupLabel>
                     <SidebarGroupContent>
-                        <SidebarMenu>
+                        <SidebarMenu className="gap-1">
                             {navItems.map((item) => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton
                                         asChild
                                         isActive={pathname === item.url}
                                         tooltip={item.title}
+                                        className={`h-10 px-3 rounded-lg transition-all duration-200 ${pathname === item.url
+                                            ? "bg-primary/5 text-primary font-bold shadow-sm shadow-primary/5"
+                                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                            }`}
                                     >
-                                        <Link href={item.url}>
-                                            <HugeiconsIcon icon={item.icon} className="size-4" />
-                                            <span>{item.title}</span>
+                                        <Link href={item.url} className="flex items-center gap-3">
+                                            <HugeiconsIcon
+                                                icon={item.icon}
+                                                className={`size-4 transition-transform ${pathname === item.url ? "scale-105 text-primary" : ""}`}
+                                            />
+                                            <span className="text-[13px] tracking-tight">{item.title}</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
@@ -135,16 +141,17 @@ export function AppSidebar() {
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
-                <SidebarGroup className="mt-auto">
+
+                <SidebarGroup className="mt-auto pb-4">
                     <SidebarGroupContent>
                         <SidebarMenu>
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     onClick={() => signOut({ callbackUrl: "/auth/login" })}
-                                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                    className="h-10 px-3 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
                                 >
                                     <HugeiconsIcon icon={Logout01Icon} className="size-4" />
-                                    <span>Keluar</span>
+                                    <span className="text-[13px] font-bold ml-3 uppercase tracking-widest opacity-80">Logout</span>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                         </SidebarMenu>

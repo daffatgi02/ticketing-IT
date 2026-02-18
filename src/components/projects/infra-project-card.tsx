@@ -6,21 +6,29 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { ConfirmModal } from "@/components/ui/confirm-modal"
 import { deleteProjectAction } from "@/app/actions/project.actions"
 import { toast } from "sonner"
+import { useState } from "react"
 
 export function InfrastructureProjectCard({ project }: { project: any }) {
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
+
     const completedMilestones = project.milestones?.filter((m: any) => m.isCompleted).length || 0
     const totalMilestones = project.milestones?.length || 0
     const progress = totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0
 
     const handleDelete = async () => {
-        if (!confirm(`Hapus proyek "${project.name}"?`)) return
+        setIsDeleting(true)
         try {
             await deleteProjectAction(project.id)
             toast.success("Proyek Dihapus")
+            setIsConfirmOpen(false)
         } catch (error: any) {
             toast.error("Gagal menghapus: " + error.message)
+        } finally {
+            setIsDeleting(false)
         }
     }
 
@@ -63,11 +71,27 @@ export function InfrastructureProjectCard({ project }: { project: any }) {
                 </div>
 
                 <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" className="size-8 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 text-destructive hover:bg-destructive/10"
+                        onClick={() => setIsConfirmOpen(true)}
+                    >
                         <HugeiconsIcon icon={Delete02Icon} className="size-4" />
                     </Button>
                 </div>
             </CardContent>
+
+            <ConfirmModal
+                isOpen={isConfirmOpen}
+                onClose={() => setIsConfirmOpen(false)}
+                onConfirm={handleDelete}
+                isLoading={isDeleting}
+                variant="destructive"
+                title="Hapus Proyek?"
+                description={`Apakah Anda yakin ingin menghapus proyek "${project.name}"? Semua data terkait akan ikut terhapus.`}
+                confirmText="Hapus Proyek"
+            />
         </Card>
     )
 }

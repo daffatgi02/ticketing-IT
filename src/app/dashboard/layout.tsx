@@ -15,14 +15,16 @@ export default function DashboardLayout({
         <SidebarProvider>
             <AppSidebar />
             <SidebarInset>
-                <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-                    <SidebarTrigger className="-ml-1" />
-                    <Separator orientation="vertical" className="mr-2 h-4" />
+                <header className="flex h-14 shrink-0 items-center gap-4 bg-white px-6 border-b border-slate-100/80 sticky top-0 z-20">
+                    <SidebarTrigger className="-ml-1 text-slate-400 hover:text-primary transition-colors" />
+                    <Separator orientation="vertical" className="h-4 bg-slate-100" />
                     <div className="flex flex-1 items-center justify-between">
-                        <h1 className="text-lg font-semibold tracking-tight">IT Department Dashboard</h1>
+                        <h1 className="text-[11px] font-bold tracking-[0.2em] text-slate-400 uppercase">IT Department Dashboard</h1>
+                        <div className="flex items-center gap-3">
+                        </div>
                     </div>
                 </header>
-                <main className="flex flex-1 flex-col gap-4 p-4 pt-0">
+                <main className="flex flex-1 flex-col overflow-y-auto bg-slate-50/50">
                     {children}
                 </main>
             </SidebarInset>

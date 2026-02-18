@@ -1,7 +1,6 @@
 import { ProjectService } from "@/services/project.service"
 import { CreateProjectDialog } from "@/components/projects/create-project-dialog"
-import { InfrastructureProjectCard } from "@/components/projects/infra-project-card"
-
+import { InfrastructureList } from "@/components/projects/infrastructure-list"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 import { redirect } from "next/navigation"
@@ -24,17 +23,7 @@ export default async function InfrastructurePage() {
                 <CreateProjectDialog defaultType="INFRASTRUCTURE" />
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {projects.length > 0 ? (
-                    projects.map((project) => (
-                        <InfrastructureProjectCard key={project.id} project={project} />
-                    ))
-                ) : (
-                    <div className="col-span-full flex h-[300px] items-center justify-center rounded-2xl border-2 border-dashed border-muted text-muted-foreground">
-                        Belum ada proyek infrastruktur. Mulai dengan membuat proyek baru.
-                    </div>
-                )}
-            </div>
+            <InfrastructureList initialProjects={projects} />
         </div>
     )
 }
