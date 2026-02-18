@@ -17,6 +17,8 @@ import {
 } from "@hugeicons/core-free-icons"
 import { signOut, useSession } from "next-auth/react"
 
+import Image from "next/image"
+
 import {
     Sidebar,
     SidebarContent,
@@ -94,8 +96,14 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg">
-                            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                                <HugeiconsIcon icon={DashboardSquare01Icon} className="size-4" />
+                            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground overflow-hidden">
+                                <Image
+                                    src="/Logo WIG.png"
+                                    alt="PT WIG Logo"
+                                    width={32}
+                                    height={32}
+                                    className="object-contain"
+                                />
                             </div>
                             <div className="flex flex-col gap-0.5 leading-none">
                                 <span className="font-semibold text-xs">PT Wijaya Inovasi Gemilang</span>

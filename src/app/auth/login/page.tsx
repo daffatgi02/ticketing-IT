@@ -4,6 +4,7 @@ import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
+import Image from "next/image"
 import {
     DashboardSquare01Icon,
     Mail01Icon,
@@ -55,8 +56,14 @@ export default function LoginPage() {
         <div className="flex h-screen w-screen items-center justify-center bg-muted/40 p-4">
             <Card className="w-full max-w-[400px] border-none shadow-2xl">
                 <CardHeader className="space-y-4 pb-8 text-center">
-                    <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-                        <HugeiconsIcon icon={DashboardSquare01Icon} className="size-6" />
+                    <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 overflow-hidden p-2">
+                        <Image
+                            src="/Logo WIG.png"
+                            alt="PT WIG Logo"
+                            width={48}
+                            height={48}
+                            className="object-contain"
+                        />
                     </div>
                     <div className="space-y-1">
                         <CardTitle className="text-2xl font-bold tracking-tight">Selamat Datang Kembali</CardTitle>
