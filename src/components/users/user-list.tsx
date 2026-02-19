@@ -1,11 +1,13 @@
 "use client"
 
 import { useState } from "react"
+import { EditUserDialog } from "@/components/users/edit-user-dialog"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
     Delete02Icon,
     MoreVerticalIcon,
     UserIcon,
+    UserEdit01Icon,
     MailIcon,
     SearchIcon
 } from "@hugeicons/core-free-icons"
@@ -40,6 +42,7 @@ export function UserList({ initialUsers }: { initialUsers: any[] }) {
     const [searchQuery, setSearchQuery] = useState("")
     const [currentPage, setCurrentPage] = useState(1)
     const [userToDelete, setUserToDelete] = useState<string | null>(null)
+    const [userToEdit, setUserToEdit] = useState<any | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
 
     const filteredUsers = initialUsers.filter(user =>
@@ -138,7 +141,8 @@ export function UserList({ initialUsers }: { initialUsers: any[] }) {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-[160px]">
-                                                    <DropdownMenuItem onClick={() => toast.info("Fitur edit segera hadir")}>
+                                                    <DropdownMenuItem onClick={() => setUserToEdit(user)}>
+                                                        <HugeiconsIcon icon={UserEdit01Icon} className="mr-2 size-4" />
                                                         Edit Profil
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
@@ -169,6 +173,12 @@ export function UserList({ initialUsers }: { initialUsers: any[] }) {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
+            />
+
+            <EditUserDialog
+                user={userToEdit}
+                open={!!userToEdit}
+                onOpenChange={(open) => { if (!open) setUserToEdit(null) }}
             />
 
             <ConfirmModal

@@ -7,6 +7,8 @@ import { z } from "zod";
 import { AuditService } from "@/services/audit.service";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import bcrypt from "bcryptjs";
+import prisma from "@/lib/prisma";
 
 const userSchema = z.object({
     name: z.string().min(3, "Nama minimal 3 karakter"),
@@ -110,3 +112,85 @@ export async function deleteUserAction(id: string) {
         throw new Error(error.message || "Gagal menghapus pengguna");
     }
 }
+
+export async function updateSelfAction(formData: FormData) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+        throw new Error("Anda harus login terlebih dahulu.");
+    }
+
+    try {
+        const data = {
+            name: formData.get("name") as string,
+            email: formData.get("email") as string,
+        };
+
+        const validated = z.object({
+            name: z.string().min(3, "Nama minimal 3 karakter"),
+            email: z.string().email("Format email salah"),
+        }).parse(data);
+
+        const user = await UserService.updateUser(session.user.id, validated);
+
+        await AuditService.logAction({
+            action: "UPDATE",
+            entity: "USER",
+            entityId: user.id,
+            details: `Memperbarui profil mandiri: ${user.name}`,
+            userId: session.user.id
+        });
+
+        revalidatePath("/dashboard/settings/profile");
+        return { success: true };
+    } catch (error: any) {
+        if (error instanceof z.ZodError) {
+            throw new Error(error.issues[0].message);
+        }
+        throw new Error(error.message || "Gagal memperbarui profil");
+    }
+}
+
+export async function changePasswordAction(formData: FormData) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+        throw new Error("Anda harus login terlebih dahulu.");
+    }
+
+    try {
+        const currentPassword = formData.get("currentPassword") as string;
+        const newPassword = formData.get("newPassword") as string;
+        const confirmPassword = formData.get("confirmPassword") as string;
+
+        if (newPassword !== confirmPassword) {
+            throw new Error("Konfirmasi password baru tidak cocok.");
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id }
+        });
+
+        if (!user || !user.passwordHash) {
+            throw new Error("Pengguna tidak ditemukan.");
+        }
+
+        const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+        if (!isValid) {
+            throw new Error("Password saat ini salah.");
+        }
+
+        await UserService.updateUser(session.user.id, { password: newPassword });
+
+        await AuditService.logAction({
+            action: "UPDATE",
+            entity: "USER",
+            entityId: session.user.id,
+            details: `Mengubah password akun`,
+            userId: session.user.id
+        });
+
+        return { success: true };
+    } catch (error: any) {
+        throw new Error(error.message || "Gagal mengubah password");
+    }
+}
+

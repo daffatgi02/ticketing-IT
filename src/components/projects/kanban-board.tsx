@@ -1,183 +1,348 @@
 "use client"
 
+import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-    MoreVerticalIcon,
     Delete02Icon,
+    ViewIcon,
+    MoreVerticalIcon,
     ArrowRight02Icon,
     GlobalIcon,
     ComputerIcon,
-    UserIcon
 } from "@hugeicons/core-free-icons"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Pagination } from "@/components/ui/pagination"
 import { ConfirmModal } from "@/components/ui/confirm-modal"
+import { Pagination } from "@/components/ui/pagination"
 import { updateProjectStatusAction, deleteProjectAction } from "@/app/actions/project.actions"
-import { useState } from "react"
 import { toast } from "sonner"
 import { formatErrorMessage } from "@/lib/utils"
 
-const COLUMNS = [
-    { id: "PLANNING", title: "Antrean (Backlog)", color: "border-slate-300" },
-    { id: "IN_PROGRESS", title: "Sedang Dikerjakan", color: "border-blue-400" },
-    { id: "ON_HOLD", title: "Tertunda (Review)", color: "border-amber-400" },
-    { id: "COMPLETED", title: "Selesai", color: "border-green-400" },
+const STATUS_MAP: Record<string, { label: string; className: string }> = {
+    PLANNING: {
+        label: "Backlog",
+        className: "bg-slate-100 text-slate-600 border-slate-200",
+    },
+    IN_PROGRESS: {
+        label: "Dikerjakan",
+        className: "bg-blue-50 text-blue-600 border-blue-200",
+    },
+    ON_HOLD: {
+        label: "Tertunda",
+        className: "bg-amber-50 text-amber-600 border-amber-200",
+    },
+    COMPLETED: {
+        label: "Selesai",
+        className: "bg-emerald-50 text-emerald-600 border-emerald-200",
+    },
+}
+
+const STATUS_OPTIONS = [
+    { id: "PLANNING", title: "Backlog" },
+    { id: "IN_PROGRESS", title: "Dikerjakan" },
+    { id: "ON_HOLD", title: "Tertunda" },
+    { id: "COMPLETED", title: "Selesai" },
 ]
 
-const CARDS_PER_PAGE = 5
+const ROWS_PER_PAGE = 10
+
+interface ProjectDetailDialogProps {
+    project: any
+    isOpen: boolean
+    onClose: () => void
+    onMove: (id: string, status: string) => void
+}
+
+function ProjectDetailDialog({ project, isOpen, onClose, onMove }: ProjectDetailDialogProps) {
+    if (!isOpen || !project) return null
+
+    const status = STATUS_MAP[project.status] || STATUS_MAP.PLANNING
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
+            <div
+                className="w-full max-w-lg rounded-xl border bg-background shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="flex items-start justify-between border-b px-6 py-4">
+                    <div className="space-y-1.5 pr-4">
+                        <h3 className="text-lg font-bold leading-tight">{project.name}</h3>
+                        {project.websiteName && (
+                            <div className="flex items-center gap-1.5 text-xs text-primary font-semibold">
+                                <HugeiconsIcon icon={GlobalIcon} className="size-3.5" />
+                                <span>{project.websiteName}</span>
+                            </div>
+                        )}
+                    </div>
+                    <Badge variant="outline" className={`shrink-0 text-[10px] ${status.className}`}>
+                        {status.label}
+                    </Badge>
+                </div>
+
+                {/* Body */}
+                <div className="space-y-4 px-6 py-4">
+                    <div>
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Deskripsi</span>
+                        <p className="mt-1 text-sm text-foreground/80 leading-relaxed">
+                            {project.description || "Tidak ada deskripsi."}
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">PIC</span>
+                            <p className="mt-0.5 text-sm font-medium">{project.manager?.name || "—"}</p>
+                        </div>
+                        <div>
+                            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Environment</span>
+                            <p className="mt-0.5 text-sm font-medium">{project.environment || "—"}</p>
+                        </div>
+                        <div>
+                            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Dibuat</span>
+                            <p className="mt-0.5 text-sm font-medium">
+                                {new Date(project.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
+                            </p>
+                        </div>
+                        <div>
+                            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Terakhir Diperbarui</span>
+                            <p className="mt-0.5 text-sm font-medium">
+                                {new Date(project.updatedAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Quick Move */}
+                    <div>
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Pindahkan Status</span>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                            {STATUS_OPTIONS.filter(s => s.id !== project.status).map(s => (
+                                <Button
+                                    key={s.id}
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-xs"
+                                    onClick={() => { onMove(project.id, s.id); onClose() }}
+                                >
+                                    {s.title}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="flex justify-end border-t px-6 py-3">
+                    <Button variant="ghost" size="sm" onClick={onClose}>Tutup</Button>
+                </div>
+            </div>
+        </div>
+    )
+}
 
 export function KanbanBoard({ initialProjects }: { initialProjects: any[] }) {
-    const [pages, setPages] = useState<Record<string, number>>({
-        PLANNING: 1,
-        IN_PROGRESS: 1,
-        ON_HOLD: 1,
-        COMPLETED: 1
-    })
+    const [currentPage, setCurrentPage] = useState(1)
+    const [filterStatus, setFilterStatus] = useState<string | null>(null)
     const [projectToDelete, setProjectToDelete] = useState<any | null>(null)
+    const [selectedProject, setSelectedProject] = useState<any | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
 
-    const handlePageChange = (columnId: string, page: number) => {
-        setPages(prev => ({ ...prev, [columnId]: page }))
-    }
+    const filteredProjects = filterStatus
+        ? initialProjects.filter(p => p.status === filterStatus)
+        : initialProjects
+
+    const totalPages = Math.ceil(filteredProjects.length / ROWS_PER_PAGE)
+    const paginatedProjects = filteredProjects.slice(
+        (currentPage - 1) * ROWS_PER_PAGE,
+        currentPage * ROWS_PER_PAGE
+    )
 
     const handleMove = async (id: string, status: string) => {
         try {
             await updateProjectStatusAction(id, status as any)
-            toast.success(`Proyek dipindahkan ke ${status}`)
+            toast.success(`Status diperbarui ke ${STATUS_MAP[status]?.label || status}`)
         } catch (error: any) {
-            toast.error("Gagal memindahkan proyek: " + formatErrorMessage(error))
+            toast.error("Gagal memperbarui: " + formatErrorMessage(error))
         }
     }
 
     const handleDelete = async () => {
         if (!projectToDelete) return
         setIsDeleting(true)
-
         try {
             await deleteProjectAction(projectToDelete.id)
             toast.success("Proyek berhasil dihapus")
             setProjectToDelete(null)
         } catch (error: any) {
-            toast.error("Gagal menghapus proyek: " + formatErrorMessage(error))
+            toast.error("Gagal menghapus: " + formatErrorMessage(error))
         } finally {
             setIsDeleting(false)
         }
     }
 
+    /** Counts per status for filter tabs */
+    const statusCounts: Record<string, number> = {}
+    for (const p of initialProjects) {
+        statusCounts[p.status] = (statusCounts[p.status] || 0) + 1
+    }
+
     return (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-            {COLUMNS.map((column) => (
-                <div key={column.id} className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between px-2">
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground italic">
-                            {column.title}
-                        </h3>
-                        <Badge variant="secondary" className="rounded-full">
-                            {initialProjects.filter(p => p.status === column.id).length}
-                        </Badge>
-                    </div>
+        <div className="space-y-4">
+            {/* Filter tabs */}
+            <div className="flex items-center gap-1.5 rounded-lg bg-muted/50 p-1 w-fit">
+                <button
+                    onClick={() => { setFilterStatus(null); setCurrentPage(1) }}
+                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${filterStatus === null
+                            ? "bg-background shadow-sm text-foreground"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                >
+                    Semua <span className="ml-1 text-[10px] opacity-60">{initialProjects.length}</span>
+                </button>
+                {STATUS_OPTIONS.map(opt => (
+                    <button
+                        key={opt.id}
+                        onClick={() => { setFilterStatus(opt.id); setCurrentPage(1) }}
+                        className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${filterStatus === opt.id
+                                ? "bg-background shadow-sm text-foreground"
+                                : "text-muted-foreground hover:text-foreground"
+                            }`}
+                    >
+                        {opt.title} <span className="ml-1 text-[10px] opacity-60">{statusCounts[opt.id] || 0}</span>
+                    </button>
+                ))}
+            </div>
 
-                    <div className={`flex flex-1 flex-col gap-4 rounded-xl border-t-4 bg-muted/30 p-3 min-h-[400px] ${column.color}`}>
-                        {(() => {
-                            const columnProjects = initialProjects.filter((p) => p.status === column.id)
-                            const totalPages = Math.ceil(columnProjects.length / CARDS_PER_PAGE)
-                            const currentPage = pages[column.id]
-                            const startIndex = (currentPage - 1) * CARDS_PER_PAGE
-                            const paginatedProjects = columnProjects.slice(startIndex, startIndex + CARDS_PER_PAGE)
-
+            {/* Table */}
+            <div className="rounded-xl border bg-background overflow-hidden">
+                <table className="w-full text-sm">
+                    <thead>
+                        <tr className="border-b bg-muted/30">
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nama Proyek</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Website</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden lg:table-cell">PIC</th>
+                            <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Env</th>
+                            <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                            <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Diperbarui</th>
+                            <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground w-12"></th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                        {paginatedProjects.length > 0 ? paginatedProjects.map((project) => {
+                            const status = STATUS_MAP[project.status] || STATUS_MAP.PLANNING
                             return (
-                                <>
-                                    <div className="flex-1 flex flex-col gap-4">
-                                        {paginatedProjects.length > 0 ? (
-                                            paginatedProjects.map((project) => (
-                                                <Card key={project.id} className="group cursor-grab border-none shadow-sm transition-all active:cursor-grabbing hover:shadow-md">
-                                                    <CardHeader className="p-4 pb-2">
-                                                        <div className="flex items-start justify-between">
-                                                            <CardTitle className="text-sm font-bold">{project.name}</CardTitle>
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger asChild>
-                                                                    <Button variant="ghost" size="icon" className="size-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                        <HugeiconsIcon icon={MoreVerticalIcon} className="size-3.5" />
-                                                                    </Button>
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent align="end">
-                                                                    {COLUMNS.map(col => col.id !== project.status && (
-                                                                        <DropdownMenuItem key={col.id} onClick={() => handleMove(project.id, col.id)}>
-                                                                            <HugeiconsIcon icon={ArrowRight02Icon} className="mr-2 size-3.5" />
-                                                                            {col.title}
-                                                                        </DropdownMenuItem>
-                                                                    ))}
-                                                                    <DropdownMenuItem
-                                                                        onClick={() => setProjectToDelete(project)}
-                                                                        className="text-red-500 focus:text-red-500"
-                                                                    >
-                                                                        <HugeiconsIcon icon={Delete02Icon} className="mr-2 size-3.5" />
-                                                                        Hapus
-                                                                    </DropdownMenuItem>
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
-                                                        </div>
-                                                        {project.websiteName && (
-                                                            <div className="flex items-center gap-1.5 mt-1 text-[10px] text-primary font-semibold">
-                                                                <HugeiconsIcon icon={GlobalIcon} className="size-3" />
-                                                                <span className="truncate">{project.websiteName}</span>
-                                                            </div>
-                                                        )}
-                                                    </CardHeader>
-                                                    <CardContent className="p-4 pt-0">
-                                                        <p className="line-clamp-2 text-xs text-muted-foreground mb-4">
-                                                            {project.description || "Tidak ada deskripsi."}
-                                                        </p>
-                                                        <div className="flex items-center justify-between gap-1 mt-2">
-                                                            <div className="flex flex-wrap gap-1.5">
-                                                                <div className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
-                                                                    <HugeiconsIcon icon={UserIcon} className="size-3" />
-                                                                    <span>{project.manager?.name || "Admin"}</span>
-                                                                </div>
-                                                                {project.environment && (
-                                                                    <div className="flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-medium text-purple-600 border border-purple-100 uppercase">
-                                                                        <HugeiconsIcon icon={ComputerIcon} className="size-3" />
-                                                                        <span>{project.environment}</span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <span className="text-[10px] text-muted-foreground italic whitespace-nowrap">
-                                                                {new Date(project.updatedAt).toLocaleDateString("id-ID", { day: 'numeric', month: 'short' })}
-                                                            </span>
-                                                        </div>
-                                                    </CardContent>
-                                                </Card>
-                                            ))
-                                        ) : (
-                                            <div className="flex flex-1 items-center justify-center p-8 text-center text-[11px] text-muted-foreground italic border border-dashed rounded-lg border-muted-foreground/20">
-                                                Kosong
+                                <tr
+                                    key={project.id}
+                                    className="group transition-colors hover:bg-muted/30 cursor-pointer"
+                                    onClick={() => setSelectedProject(project)}
+                                >
+                                    <td className="px-4 py-3">
+                                        <span className="font-medium text-foreground">{project.name}</span>
+                                        <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1 max-w-[280px]">
+                                            {project.description || "Tidak ada deskripsi"}
+                                        </p>
+                                    </td>
+                                    <td className="px-4 py-3 hidden md:table-cell">
+                                        {project.websiteName ? (
+                                            <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
+                                                <HugeiconsIcon icon={GlobalIcon} className="size-3.5 shrink-0" />
+                                                <span className="truncate max-w-[160px]">{project.websiteName}</span>
                                             </div>
+                                        ) : (
+                                            <span className="text-xs text-muted-foreground">—</span>
                                         )}
-                                    </div>
-
-                                    {totalPages > 1 && (
-                                        <Pagination
-                                            currentPage={currentPage}
-                                            totalPages={totalPages}
-                                            onPageChange={(page) => handlePageChange(column.id, page)}
-                                            className="px-0 py-2 border-none"
-                                        />
-                                    )}
-                                </>
+                                    </td>
+                                    <td className="px-4 py-3 hidden lg:table-cell">
+                                        <span className="text-xs text-muted-foreground">{project.manager?.name || "—"}</span>
+                                    </td>
+                                    <td className="px-4 py-3 text-center hidden sm:table-cell">
+                                        {project.environment ? (
+                                            <Badge variant="outline" className="text-[10px] uppercase border-purple-200 bg-purple-50 text-purple-600">
+                                                <HugeiconsIcon icon={ComputerIcon} className="size-3 mr-1" />
+                                                {project.environment}
+                                            </Badge>
+                                        ) : (
+                                            <span className="text-xs text-muted-foreground">—</span>
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-3 text-center">
+                                        <Badge variant="outline" className={`text-[10px] ${status.className}`}>
+                                            {status.label}
+                                        </Badge>
+                                    </td>
+                                    <td className="px-4 py-3 text-right hidden md:table-cell">
+                                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                            {new Date(project.updatedAt).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="size-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <HugeiconsIcon icon={MoreVerticalIcon} className="size-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-44">
+                                                <DropdownMenuItem onClick={() => setSelectedProject(project)}>
+                                                    <HugeiconsIcon icon={ViewIcon} className="mr-2 size-3.5" />
+                                                    Lihat Detail
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                {STATUS_OPTIONS.filter(s => s.id !== project.status).map(s => (
+                                                    <DropdownMenuItem key={s.id} onClick={() => handleMove(project.id, s.id)}>
+                                                        <HugeiconsIcon icon={ArrowRight02Icon} className="mr-2 size-3.5" />
+                                                        {s.title}
+                                                    </DropdownMenuItem>
+                                                ))}
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem
+                                                    onClick={() => setProjectToDelete(project)}
+                                                    className="text-red-500 focus:text-red-500"
+                                                >
+                                                    <HugeiconsIcon icon={Delete02Icon} className="mr-2 size-3.5" />
+                                                    Hapus
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </td>
+                                </tr>
                             )
-                        })()}
-                    </div>
-                </div>
-            ))}
+                        }) : (
+                            <tr>
+                                <td colSpan={7} className="px-4 py-12 text-center text-sm text-muted-foreground italic">
+                                    {filterStatus ? "Tidak ada proyek dengan status ini." : "Belum ada proyek."}
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
 
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
+            )}
+
+            {/* Detail Dialog */}
+            <ProjectDetailDialog
+                project={selectedProject}
+                isOpen={!!selectedProject}
+                onClose={() => setSelectedProject(null)}
+                onMove={handleMove}
+            />
+
+            {/* Delete Confirmation */}
             <ConfirmModal
                 isOpen={!!projectToDelete}
                 onClose={() => setProjectToDelete(null)}
@@ -185,7 +350,7 @@ export function KanbanBoard({ initialProjects }: { initialProjects: any[] }) {
                 isLoading={isDeleting}
                 variant="destructive"
                 title="Hapus Proyek?"
-                description={`Apakah Anda yakin ingin menghapus proyek "${projectToDelete?.name}"? Tindakan ini akan menghapus semua status dan data terkait.`}
+                description={`Apakah Anda yakin ingin menghapus proyek "${projectToDelete?.name}"? Tindakan ini akan menghapus semua data terkait.`}
                 confirmText="Ya, Hapus"
             />
         </div>
