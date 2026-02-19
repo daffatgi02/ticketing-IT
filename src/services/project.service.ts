@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { ProjectType, ProjectStatus } from "@prisma/client";
+import { ProjectType, ProjectStatus, InfraPhase } from "@prisma/client";
 
 export class ProjectService {
     static async getAllProjects(type?: ProjectType) {
@@ -22,7 +22,12 @@ export class ProjectService {
                 manager: {
                     select: { name: true }
                 },
-                milestones: true
+                milestones: true,
+                proposal: true,
+                rkbSubmission: true,
+                rkbItems: { orderBy: { createdAt: "asc" } },
+                disbursement: true,
+                executionLogs: { orderBy: { executionDate: "desc" } },
             }
         });
     }
@@ -36,11 +41,17 @@ export class ProjectService {
         environment?: string;
         startDate?: Date;
         endDate?: Date;
+        category?: string;
+        location?: string;
+        requestedBy?: string;
+        estimatedBudget?: number;
     }) {
+        const isInfra = data.type === ProjectType.INFRASTRUCTURE;
         return await prisma.project.create({
             data: {
                 ...data,
-                status: ProjectStatus.PLANNING
+                status: ProjectStatus.PLANNING,
+                currentPhase: isInfra ? InfraPhase.PROPOSAL : null,
             }
         });
     }

@@ -1,7 +1,7 @@
 "use client"
 
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Building01Icon, Calendar03Icon, UserIcon, Delete02Icon } from "@hugeicons/core-free-icons"
+import { Building01Icon, Calendar03Icon, UserIcon, Delete02Icon, LocationIcon } from "@hugeicons/core-free-icons"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
@@ -11,14 +11,25 @@ import { deleteProjectAction } from "@/app/actions/project.actions"
 import { toast } from "sonner"
 import { useState } from "react"
 import { formatErrorMessage } from "@/lib/utils"
+import Link from "next/link"
+
+const PHASE_LABELS: Record<string, string> = {
+    PROPOSAL: "Proposal",
+    RKB: "RKB",
+    DISBURSEMENT: "Pencairan",
+    EXECUTION: "Eksekusi",
+    COMPLETED: "Selesai",
+}
+
+const PHASE_ORDER = ["PROPOSAL", "RKB", "DISBURSEMENT", "EXECUTION", "COMPLETED"]
 
 export function InfrastructureProjectCard({ project }: { project: any }) {
     const [isConfirmOpen, setIsConfirmOpen] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
 
-    const completedMilestones = project.milestones?.filter((m: any) => m.isCompleted).length || 0
-    const totalMilestones = project.milestones?.length || 0
-    const progress = totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0
+    const currentPhase = project.currentPhase || "PROPOSAL"
+    const phaseIndex = PHASE_ORDER.indexOf(currentPhase)
+    const phaseProgress = ((phaseIndex) / (PHASE_ORDER.length - 1)) * 100
 
     const handleDelete = async () => {
         setIsDeleting(true)
@@ -35,53 +46,76 @@ export function InfrastructureProjectCard({ project }: { project: any }) {
 
     return (
         <Card className="group relative overflow-hidden transition-all hover:shadow-md">
-            <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                    <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                        <HugeiconsIcon icon={Building01Icon} className="size-5" />
+            <Link href={`/dashboard/infrastructure/${project.id}`}>
+                <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between">
+                        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                            <HugeiconsIcon icon={Building01Icon} className="size-5" />
+                        </div>
+                        <div className="flex gap-1.5">
+                            <Badge variant="outline" className={
+                                currentPhase === "COMPLETED"
+                                    ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px]"
+                                    : "bg-blue-500/10 text-blue-600 border-blue-500/20 text-[10px]"
+                            }>
+                                {PHASE_LABELS[currentPhase] || currentPhase}
+                            </Badge>
+                            <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px]">
+                                {project.status}
+                            </Badge>
+                        </div>
                     </div>
-                    <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">
-                        {project.status}
-                    </Badge>
-                </div>
-                <div className="mt-4 space-y-1">
-                    <CardTitle className="leading-none">{project.name}</CardTitle>
-                    <CardDescription className="line-clamp-2 text-xs">
-                        {project.description || "Tidak ada deskripsi."}
-                    </CardDescription>
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-0">
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Progres Proyek</span>
-                        <span className="font-semibold">{Math.round(progress)}%</span>
+                    <div className="mt-4 space-y-1">
+                        <CardTitle className="leading-none">{project.name}</CardTitle>
+                        <CardDescription className="line-clamp-2 text-xs">
+                            {project.description || "Tidak ada deskripsi."}
+                        </CardDescription>
                     </div>
-                    <Progress value={progress} className="h-1.5" />
-                </div>
+                </CardHeader>
+                <CardContent className="space-y-4 pt-0">
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">Fase SOP</span>
+                            <span className="font-semibold">{phaseIndex + 1}/{PHASE_ORDER.length}</span>
+                        </div>
+                        <Progress value={phaseProgress} className="h-1.5" />
+                    </div>
 
-                <div className="grid grid-cols-2 gap-2 text-[11px]">
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <HugeiconsIcon icon={Calendar03Icon} className="size-3.5" />
-                        <span>{project.endDate ? new Date(project.endDate).toLocaleDateString("id-ID") : "No Date"}</span>
+                    <div className="grid grid-cols-2 gap-2 text-[11px]">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <HugeiconsIcon icon={Calendar03Icon} className="size-3.5" />
+                            <span>{project.endDate ? new Date(project.endDate).toLocaleDateString("id-ID") : "Belum diatur"}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <HugeiconsIcon icon={UserIcon} className="size-3.5" />
+                            <span className="truncate">{project.manager?.name || "No PIC"}</span>
+                        </div>
+                        {project.category && (
+                            <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <HugeiconsIcon icon={Building01Icon} className="size-3.5" />
+                                <span>{project.category}</span>
+                            </div>
+                        )}
+                        {project.location && (
+                            <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <HugeiconsIcon icon={LocationIcon} className="size-3.5" />
+                                <span className="truncate">{project.location}</span>
+                            </div>
+                        )}
                     </div>
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <HugeiconsIcon icon={UserIcon} className="size-3.5" />
-                        <span className="truncate">{project.manager?.name || "No Manager"}</span>
-                    </div>
-                </div>
+                </CardContent>
+            </Link>
 
-                <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8 text-destructive hover:bg-destructive/10"
-                        onClick={() => setIsConfirmOpen(true)}
-                    >
-                        <HugeiconsIcon icon={Delete02Icon} className="size-4" />
-                    </Button>
-                </div>
-            </CardContent>
+            <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 text-destructive hover:bg-destructive/10"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsConfirmOpen(true) }}
+                >
+                    <HugeiconsIcon icon={Delete02Icon} className="size-4" />
+                </Button>
+            </div>
 
             <ConfirmModal
                 isOpen={isConfirmOpen}

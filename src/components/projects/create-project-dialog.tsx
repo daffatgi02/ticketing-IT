@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { PlusSignIcon, Building01Icon, Calendar03Icon, UserIcon, GlobalIcon, ComputerIcon } from "@hugeicons/core-free-icons"
+import { PlusSignIcon, Building01Icon, Calendar03Icon, UserIcon, GlobalIcon, ComputerIcon, LocationIcon, MoneyReceiveSquareIcon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -124,6 +124,70 @@ export function CreateProjectDialog({ defaultType }: { defaultType: "INFRASTRUCT
                                     </Select>
                                 </div>
                             </div>
+                        )}
+
+                        {defaultType === "INFRASTRUCTURE" && (
+                            <>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="category">Kategori</Label>
+                                        <Select name="category">
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Pilih Kategori" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Server">Server</SelectItem>
+                                                <SelectItem value="Network">Network</SelectItem>
+                                                <SelectItem value="CCTV">CCTV</SelectItem>
+                                                <SelectItem value="Printer">Printer</SelectItem>
+                                                <SelectItem value="UPS">UPS</SelectItem>
+                                                <SelectItem value="PC/Laptop">PC/Laptop</SelectItem>
+                                                <SelectItem value="Telepon">Telepon</SelectItem>
+                                                <SelectItem value="Lainnya">Lainnya</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="location">Lokasi Instalasi</Label>
+                                        <div className="relative">
+                                            <HugeiconsIcon icon={LocationIcon} className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                id="location"
+                                                name="location"
+                                                placeholder="Gedung A Lt. 2"
+                                                className="pl-9"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="requestedBy">Pemohon / Departemen</Label>
+                                        <div className="relative">
+                                            <HugeiconsIcon icon={UserIcon} className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                id="requestedBy"
+                                                name="requestedBy"
+                                                placeholder="Dept. Produksi"
+                                                className="pl-9"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="estimatedBudget">Estimasi Anggaran (Rp)</Label>
+                                        <div className="relative">
+                                            <HugeiconsIcon icon={MoneyReceiveSquareIcon} className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                id="estimatedBudget"
+                                                name="estimatedBudget"
+                                                type="number"
+                                                placeholder="5000000"
+                                                className="pl-9"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
                         )}
 
                         <div className="grid grid-cols-2 gap-4">

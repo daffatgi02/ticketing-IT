@@ -17,6 +17,10 @@ const projectSchema = z.object({
     environment: z.string().optional(),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
+    category: z.string().optional(),
+    location: z.string().optional(),
+    requestedBy: z.string().optional(),
+    estimatedBudget: z.string().optional(),
 });
 
 export async function createProjectAction(formData: FormData) {
@@ -30,6 +34,10 @@ export async function createProjectAction(formData: FormData) {
             environment: formData.get("environment") as string || undefined,
             startDate: (formData.get("startDate") as string) || undefined,
             endDate: (formData.get("endDate") as string) || undefined,
+            category: formData.get("category") as string || undefined,
+            location: formData.get("location") as string || undefined,
+            requestedBy: formData.get("requestedBy") as string || undefined,
+            estimatedBudget: formData.get("estimatedBudget") as string || undefined,
         };
 
         const validated = projectSchema.parse(rawData);
@@ -37,6 +45,7 @@ export async function createProjectAction(formData: FormData) {
             ...validated,
             startDate: validated.startDate ? new Date(validated.startDate) : undefined,
             endDate: validated.endDate ? new Date(validated.endDate) : undefined,
+            estimatedBudget: validated.estimatedBudget ? parseFloat(validated.estimatedBudget) : undefined,
         });
 
         const session = await getServerSession(authOptions);

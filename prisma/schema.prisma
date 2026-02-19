@@ -39,6 +39,22 @@ enum ProjectStatus {
   ON_HOLD
 }
 
+enum InfraPhase {
+  PROPOSAL
+  RKB
+  DISBURSEMENT
+  EXECUTION
+  COMPLETED
+}
+
+enum ApprovalStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  REVISED
+}
+
 enum TaskFrequency {
   DAILY
   WEEKLY
@@ -118,10 +134,22 @@ model Project {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
+  // Infrastructure-specific fields
+  currentPhase    InfraPhase?  // Fase SOP saat ini (null untuk WEB_DEV)
+  category        String?      // Server, Network, CCTV, Printer, dll.
+  location        String?      // Lokasi instalasi
+  requestedBy     String?      // Pemohon / departemen
+  estimatedBudget Float?       // Estimasi anggaran awal
+
   managerId String
   manager   User   @relation("ManagedBy", fields: [managerId], references: [id])
 
-  milestones Milestone[]
+  milestones     Milestone[]
+  proposal       InfraProposal?
+  rkbSubmission  RkbSubmission?
+  rkbItems       RkbItem[]
+  disbursement   FinanceDisbursement?
+  executionLogs  InfraExecution[]
 }
 
 model Milestone {
@@ -133,6 +161,93 @@ model Milestone {
   
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model InfraProposal {
+  id              String         @id @default(cuid())
+  background      String?        @db.Text  // Latar belakang
+  objectives      String?        @db.Text  // Tujuan
+  scope           String?        @db.Text  // Ruang lingkup
+  benefits        String?        @db.Text  // Manfaat
+  riskAnalysis    String?        @db.Text  // Analisis risiko
+  approvalStatus  ApprovalStatus @default(DRAFT)
+  approvedBy      String?                  // Nama approver
+  approvalDate    DateTime?
+  rejectionReason String?        @db.Text
+  attachmentUrl   String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model RkbSubmission {
+  id               String         @id @default(cuid())
+  submissionNumber String?                  // Nomor pengajuan (RKB/IT/2026/001)
+  justification    String?        @db.Text  // Justifikasi kebutuhan
+  totalBudget      Float?                   // Total anggaran
+  approvalStatus   ApprovalStatus @default(DRAFT)
+  approvedBy       String?
+  approvalDate     DateTime?
+  rejectionReason  String?        @db.Text
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model RkbItem {
+  id            String   @id @default(cuid())
+  itemName      String             // Nama barang/jasa
+  specification String?  @db.Text  // Spesifikasi teknis
+  quantity      Int      @default(1)
+  unit          String   @default("Unit") // Satuan
+  unitPrice     Float    @default(0)
+  totalPrice    Float    @default(0)       // quantity * unitPrice
+  vendor        String?                    // Vendor/supplier
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model FinanceDisbursement {
+  id               String         @id @default(cuid())
+  approvedBudget   Float?                   // Anggaran disetujui
+  disbursedAmount  Float?                   // Jumlah dicairkan
+  disbursementDate DateTime?
+  paymentMethod    String?                  // Transfer, Cash, dll.
+  referenceNumber  String?                  // Nomor referensi pembayaran
+  approvalStatus   ApprovalStatus @default(DRAFT)
+  approvedBy       String?
+  approvalDate     DateTime?
+  notes            String?        @db.Text
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model InfraExecution {
+  id                   String   @id @default(cuid())
+  activityDescription  String   @db.Text    // Deskripsi kegiatan
+  executionDate        DateTime @default(now())
+  progressPercentage   Int      @default(0) // 0-100
+  findings             String?  @db.Text    // Temuan/catatan
+  completedBy          String?              // Pelaksana
+  photoUrl             String?
+  createdAt            DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
 }
 
 model Task {
