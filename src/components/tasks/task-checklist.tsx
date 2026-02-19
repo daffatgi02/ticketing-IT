@@ -10,7 +10,7 @@ import { Pagination } from "@/components/ui/pagination"
 import { ConfirmModal } from "@/components/ui/confirm-modal"
 import { toggleTaskCompletionAction, deleteTaskAction } from "@/app/actions/task.actions"
 import { toast } from "sonner"
-import { cn } from "@/lib/utils"
+import { cn, formatErrorMessage } from "@/lib/utils"
 
 const ITEMS_PER_PAGE = 6
 
@@ -29,7 +29,7 @@ export function TaskChecklist({ tasks }: { tasks: any[] }) {
             await toggleTaskCompletionAction(id, isCompleted)
             toast.success(isCompleted ? "Tugas selesai" : "Tugas dibuka kembali")
         } catch (error: any) {
-            toast.error("Gagal memperbarui tugas: " + error.message)
+            toast.error("Gagal memperbarui tugas: " + formatErrorMessage(error))
         }
     }
 
@@ -41,8 +41,9 @@ export function TaskChecklist({ tasks }: { tasks: any[] }) {
             await deleteTaskAction(taskToDelete)
             toast.success("Tugas dihapus")
             setTaskToDelete(null)
+            setTaskToDelete(null)
         } catch (error: any) {
-            toast.error("Gagal menghapus tugas: " + error.message)
+            toast.error("Gagal menghapus tugas: " + formatErrorMessage(error))
         } finally {
             setIsDeleting(false)
         }

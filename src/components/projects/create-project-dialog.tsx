@@ -26,6 +26,7 @@ import {
 import { createProjectAction } from "@/app/actions/project.actions"
 import { toast } from "sonner"
 import { useSession } from "next-auth/react"
+import { formatErrorMessage } from "@/lib/utils"
 
 export function CreateProjectDialog({ defaultType }: { defaultType: "INFRASTRUCTURE" | "WEB_DEV" }) {
     const { data: session } = useSession()
@@ -49,7 +50,7 @@ export function CreateProjectDialog({ defaultType }: { defaultType: "INFRASTRUCT
             toast.success("Proyek Berhasil Dibuat")
             setOpen(false)
         } catch (error: any) {
-            toast.error("Gagal membuat proyek: " + error.message)
+            toast.error("Gagal membuat proyek: " + formatErrorMessage(error))
         } finally {
             setIsLoading(false)
         }

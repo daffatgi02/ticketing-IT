@@ -6,11 +6,17 @@ import {
 } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 
-export default function DashboardLayout({
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+
+export default async function DashboardLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
+    const session = await getServerSession(authOptions)
+    const isAdmin = session?.user?.role === "ADMIN"
+
     return (
         <SidebarProvider>
             <AppSidebar />
@@ -19,7 +25,9 @@ export default function DashboardLayout({
                     <SidebarTrigger className="-ml-1 text-slate-400 hover:text-primary transition-colors" />
                     <Separator orientation="vertical" className="h-4 bg-slate-100" />
                     <div className="flex flex-1 items-center justify-between">
-                        <h1 className="text-[11px] font-bold tracking-[0.2em] text-slate-400 uppercase">IT Department Dashboard</h1>
+                        <h1 className="text-[11px] font-bold tracking-[0.2em] text-slate-400 uppercase">
+                            {isAdmin ? "IT Department Dashboard" : "PT WIG Helpdesk Platform"}
+                        </h1>
                         <div className="flex items-center gap-3">
                         </div>
                     </div>

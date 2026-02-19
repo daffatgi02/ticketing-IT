@@ -8,9 +8,11 @@ import {
     Search01Icon,
     Ticket01Icon,
     PlusSignIcon,
-    FilterIcon
+    FilterIcon,
+    ViewIcon
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -32,10 +34,16 @@ import { Pagination } from "@/components/ui/pagination"
 import { ConfirmModal } from "@/components/ui/confirm-modal"
 import { deleteTicketAction, updateTicketStatusAction } from "@/app/actions/ticket.actions"
 import { toast } from "sonner"
+import { formatErrorMessage } from "@/lib/utils"
+
+import { useSession } from "next-auth/react"
 
 const ITEMS_PER_PAGE = 8
 
 export function TicketList({ initialTickets }: { initialTickets: any[] }) {
+    const { data: session } = useSession()
+    const isAdmin = session?.user?.role === "ADMIN"
+
     const [searchQuery, setSearchQuery] = useState("")
     const [currentPage, setCurrentPage] = useState(1)
     const [ticketToDelete, setTicketToDelete] = useState<string | null>(null)
@@ -65,7 +73,7 @@ export function TicketList({ initialTickets }: { initialTickets: any[] }) {
             toast.success("Tiket Berhasil Dihapus")
             setTicketToDelete(null)
         } catch (error: any) {
-            toast.error("Gagal menghapus tiket: " + error.message)
+            toast.error("Gagal menghapus tiket: " + formatErrorMessage(error))
         } finally {
             setIsDeleting(false)
         }
@@ -76,7 +84,7 @@ export function TicketList({ initialTickets }: { initialTickets: any[] }) {
             await updateTicketStatusAction(id, status as any)
             toast.success(`Status tiket diperbarui ke ${status}`)
         } catch (error: any) {
-            toast.error("Gagal memperbarui status: " + error.message)
+            toast.error("Gagal memperbarui status: " + formatErrorMessage(error))
         }
     }
 
@@ -148,31 +156,49 @@ export function TicketList({ initialTickets }: { initialTickets: any[] }) {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="size-8">
-                                                        <HugeiconsIcon icon={MoreVerticalIcon} className="size-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="w-[160px]">
-                                                    <DropdownMenuItem onClick={() => handleUpdateStatus(ticket.id, "IN_PROGRESS")}>
-                                                        Kerjakan
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => handleUpdateStatus(ticket.id, "RESOLVED")}>
-                                                        Selesaikan
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => handleUpdateStatus(ticket.id, "CLOSED")}>
-                                                        Tutup
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem
-                                                        onClick={() => setTicketToDelete(ticket.id)}
-                                                        className="text-red-500 focus:text-red-500 focus:bg-red-50"
-                                                    >
-                                                        <HugeiconsIcon icon={Delete02Icon} className="mr-2 size-4" />
-                                                        Hapus
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
+                                            <div className="flex items-center justify-end gap-1">
+                                                <Button variant="ghost" size="icon" className="size-8 text-primary hover:bg-primary/10" asChild title="Lihat Detail">
+                                                    <Link href={`/dashboard/ticketing/${ticket.id}`}>
+                                                        <HugeiconsIcon icon={ViewIcon} className="size-4" />
+                                                    </Link>
+                                                </Button>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="size-8">
+                                                            <HugeiconsIcon icon={MoreVerticalIcon} className="size-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-[160px]">
+                                                        <DropdownMenuItem asChild className="cursor-pointer">
+                                                            <Link href={`/dashboard/ticketing/${ticket.id}`} className="flex items-center">
+                                                                <HugeiconsIcon icon={ViewIcon} className="mr-2 size-4" />
+                                                                Lihat Detail
+                                                            </Link>
+                                                        </DropdownMenuItem>
+
+                                                        {isAdmin && (
+                                                            <>
+                                                                <DropdownMenuItem onClick={() => handleUpdateStatus(ticket.id, "IN_PROGRESS")} className="cursor-pointer">
+                                                                    Kerjakan
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={() => handleUpdateStatus(ticket.id, "RESOLVED")} className="cursor-pointer">
+                                                                    Selesaikan
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={() => handleUpdateStatus(ticket.id, "CLOSED")} className="cursor-pointer">
+                                                                    Tutup
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem
+                                                                    onClick={() => setTicketToDelete(ticket.id)}
+                                                                    className="text-red-500 focus:text-red-500 focus:bg-red-50 cursor-pointer"
+                                                                >
+                                                                    <HugeiconsIcon icon={Delete02Icon} className="mr-2 size-4" />
+                                                                    Hapus
+                                                                </DropdownMenuItem>
+                                                            </>
+                                                        )}
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))

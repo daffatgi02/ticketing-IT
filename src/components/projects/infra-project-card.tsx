@@ -10,6 +10,7 @@ import { ConfirmModal } from "@/components/ui/confirm-modal"
 import { deleteProjectAction } from "@/app/actions/project.actions"
 import { toast } from "sonner"
 import { useState } from "react"
+import { formatErrorMessage } from "@/lib/utils"
 
 export function InfrastructureProjectCard({ project }: { project: any }) {
     const [isConfirmOpen, setIsConfirmOpen] = useState(false)
@@ -26,7 +27,7 @@ export function InfrastructureProjectCard({ project }: { project: any }) {
             toast.success("Proyek Dihapus")
             setIsConfirmOpen(false)
         } catch (error: any) {
-            toast.error("Gagal menghapus: " + error.message)
+            toast.error("Gagal menghapus: " + formatErrorMessage(error))
         } finally {
             setIsDeleting(false)
         }

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select"
 import { createUserAction } from "@/app/actions/user.actions"
 import { toast } from "sonner"
+import { formatErrorMessage } from "@/lib/utils"
 
 export function CreateUserDialog() {
     const [open, setOpen] = useState(false)
@@ -40,7 +41,7 @@ export function CreateUserDialog() {
             toast.success("Pengguna Berhasil Ditambahkan")
             setOpen(false)
         } catch (error: any) {
-            toast.error("Gagal menambahkan pengguna: " + error.message)
+            toast.error("Gagal menambahkan pengguna: " + formatErrorMessage(error))
         } finally {
             setIsLoading(false)
         }

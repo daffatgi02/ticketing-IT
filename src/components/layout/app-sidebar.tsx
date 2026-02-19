@@ -73,7 +73,10 @@ export function AppSidebar() {
         let filtered = [...items]
 
         if (session?.user?.role === "USER") {
-            filtered = items.filter(item => item.title === "Tiket Bantuan")
+            filtered = items.filter(item =>
+                item.url === "/dashboard" ||
+                item.url === "/dashboard/ticketing"
+            )
         }
 
         if (session?.user?.role === "ADMIN") {

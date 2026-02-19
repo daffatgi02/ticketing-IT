@@ -26,6 +26,7 @@ import {
 import { createTaskAction } from "@/app/actions/task.actions"
 import { toast } from "sonner"
 import { useSession } from "next-auth/react"
+import { formatErrorMessage } from "@/lib/utils"
 
 export function CreateTaskDialog() {
     const { data: session } = useSession()
@@ -44,7 +45,7 @@ export function CreateTaskDialog() {
             toast.success("Tugas Berhasil Ditambahkan")
             setOpen(false)
         } catch (error: any) {
-            toast.error("Gagal menambahkan tugas: " + error.message)
+            toast.error("Gagal menambahkan tugas: " + formatErrorMessage(error))
         } finally {
             setIsLoading(false)
         }

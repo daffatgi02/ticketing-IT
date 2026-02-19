@@ -19,25 +19,33 @@ import {
     TaskDaily01Icon,
     ActivityIcon,
     UserIcon,
-    ArrowRight01Icon
+    ArrowRight01Icon,
+    ChartBarLineIcon
 } from "@hugeicons/core-free-icons"
 
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 import Link from "next/link"
+import { redirect } from "next/navigation"
+
+import { ITKPIDashboard } from "@/components/dashboard/kpi-dashboard"
+import { RecordDowntimeDialog } from "@/components/dashboard/record-downtime-dialog"
 
 export default async function DashboardPage() {
     const session = await getServerSession(authOptions)
+
+    // Admins see everything, Users see their specific stats
     const isUser = session?.user?.role === "USER"
     const userId = session?.user?.id || ""
 
     // Fetch Real Data
-    const [tickets, projectsInfra, projectsWeb, tasks, rawLogs] = await Promise.all([
+    const [tickets, projectsInfra, projectsWeb, tasks, rawLogs, kpiData] = await Promise.all([
         TicketService.getAllTickets(isUser ? userId : undefined) as Promise<any[]>,
         ProjectService.getAllProjects("INFRASTRUCTURE") as Promise<any[]>,
         ProjectService.getAllProjects("WEB_DEV") as Promise<any[]>,
         TaskService.getTasksByUser(userId) as Promise<any[]>,
-        !isUser ? AuditService.getLogs(5) as Promise<any[]> : Promise.resolve([])
+        !isUser ? AuditService.getLogs(5) as Promise<any[]> : Promise.resolve([]),
+        !isUser ? TicketService.getKPIData() : Promise.resolve(null)
     ])
 
     const openTicketsCount = tickets.filter(t => t.status === "OPEN").length
@@ -89,6 +97,20 @@ export default async function DashboardPage() {
 
     return (
         <div className="flex flex-1 flex-col gap-4 p-4 sm:p-5">
+            {/* KPI Dashboard for Admins */}
+            {!isUser && kpiData && (
+                <div className="mb-2">
+                    <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <HugeiconsIcon icon={ChartBarLineIcon} className="size-3.5" />
+                            IT Performance KPI
+                        </h2>
+                        <RecordDowntimeDialog />
+                    </div>
+                    <ITKPIDashboard data={kpiData} />
+                </div>
+            )}
+
             {/* Stats Header */}
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {stats.map((stat) => (

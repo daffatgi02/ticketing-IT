@@ -23,6 +23,7 @@ import { ConfirmModal } from "@/components/ui/confirm-modal"
 import { updateProjectStatusAction, deleteProjectAction } from "@/app/actions/project.actions"
 import { useState } from "react"
 import { toast } from "sonner"
+import { formatErrorMessage } from "@/lib/utils"
 
 const COLUMNS = [
     { id: "PLANNING", title: "Antrean (Backlog)", color: "border-slate-300" },
@@ -52,7 +53,7 @@ export function KanbanBoard({ initialProjects }: { initialProjects: any[] }) {
             await updateProjectStatusAction(id, status as any)
             toast.success(`Proyek dipindahkan ke ${status}`)
         } catch (error: any) {
-            toast.error("Gagal memindahkan proyek")
+            toast.error("Gagal memindahkan proyek: " + formatErrorMessage(error))
         }
     }
 
@@ -65,7 +66,7 @@ export function KanbanBoard({ initialProjects }: { initialProjects: any[] }) {
             toast.success("Proyek berhasil dihapus")
             setProjectToDelete(null)
         } catch (error: any) {
-            toast.error("Gagal menghapus proyek: " + error.message)
+            toast.error("Gagal menghapus proyek: " + formatErrorMessage(error))
         } finally {
             setIsDeleting(false)
         }

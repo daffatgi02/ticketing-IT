@@ -26,6 +26,7 @@ import {
 import { createTicketAction } from "@/app/actions/ticket.actions"
 import { toast } from "sonner"
 import { useSession } from "next-auth/react"
+import { formatErrorMessage } from "@/lib/utils"
 
 export function CreateTicketDialog() {
     const { data: session } = useSession()
@@ -48,7 +49,7 @@ export function CreateTicketDialog() {
             toast.success("Tiket Berhasil Dibuat")
             setOpen(false)
         } catch (error: any) {
-            toast.error("Gagal membuat tiket: " + error.message)
+            toast.error("Gagal membuat tiket: " + formatErrorMessage(error))
         } finally {
             setIsLoading(false)
         }
@@ -92,6 +93,36 @@ export function CreateTicketDialog() {
                                 className="min-h-[100px]"
                                 required
                             />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="classification">Klasifikasi</Label>
+                                <Select name="classification" defaultValue="HARDWARE" required>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pilih Tipe" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="HARDWARE">Hardware</SelectItem>
+                                        <SelectItem value="SOFTWARE">Software</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="category">Kategori</Label>
+                                <Select name="category" defaultValue="WIFI" required>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pilih Kategori" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="LAPTOP">Laptop</SelectItem>
+                                        <SelectItem value="TABLET">Tablet</SelectItem>
+                                        <SelectItem value="HP">Smartphone</SelectItem>
+                                        <SelectItem value="WIFI">WiFi/Internet</SelectItem>
+                                        <SelectItem value="PRINTER">Printer</SelectItem>
+                                        <SelectItem value="OTHER">Lainnya</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="priority">Prioritas</Label>

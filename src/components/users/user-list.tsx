@@ -32,6 +32,7 @@ import { ConfirmModal } from "@/components/ui/confirm-modal"
 import { deleteUserAction } from "@/app/actions/user.actions"
 import { toast } from "sonner"
 import { useEffect } from "react"
+import { formatErrorMessage } from "@/lib/utils"
 
 const ITEMS_PER_PAGE = 10
 
@@ -65,7 +66,7 @@ export function UserList({ initialUsers }: { initialUsers: any[] }) {
             toast.success("Pengguna berhasil dihapus")
             setUserToDelete(null)
         } catch (error: any) {
-            toast.error("Gagal menghapus pengguna: " + error.message)
+            toast.error("Gagal menghapus pengguna: " + formatErrorMessage(error))
         } finally {
             setIsDeleting(false)
         }

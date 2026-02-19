@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
+import { formatErrorMessage } from "@/lib/utils"
 
 export default function LoginPage() {
     const router = useRouter()
@@ -38,14 +39,14 @@ export default function LoginPage() {
             })
 
             if (result?.error) {
-                toast.error("Gagal Masuk: " + result.error)
+                toast.error("Gagal Masuk: " + formatErrorMessage(result.error))
             } else {
                 toast.success("Berhasil Masuk!")
                 router.push("/dashboard")
                 router.refresh()
             }
         } catch (error) {
-            toast.error("Terjadi kesalahan sistem")
+            toast.error("Terjadi kesalahan sistem: " + formatErrorMessage(error))
         } finally {
             setIsLoading(false)
         }
