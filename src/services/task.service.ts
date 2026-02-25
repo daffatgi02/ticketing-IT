@@ -9,6 +9,17 @@ export class TaskService {
         });
     }
 
+    static async createTask(data: {
+        title: string;
+        description?: string;
+        frequency: TaskFrequency;
+        userId: string;
+    }) {
+        return await prisma.task.create({
+            data
+        });
+    }
+
     static async updateTask(id: string, data: Partial<{
         title: string;
         description: string;
@@ -36,6 +47,10 @@ export class TaskService {
                 lastCompletedAt: isCompleted ? new Date() : undefined
             }
         });
+    }
+
+    static async toggleTaskCompletion(id: string, isCompleted: boolean) {
+        return TaskService.toggleTask(id, isCompleted);
     }
 
     static async resetRecurringTasks() {
